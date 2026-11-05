@@ -182,12 +182,26 @@ IEC104::m_doubleCommandOperation(int count, PLUGIN_PARAMETER** params, bool with
         // information object address
         int32_t ioa = atoi(params[IOA]->value.c_str());
 
-        // the command state to send, 4 possible values
-        // (0 = not permitted, 1 = off, 2 = on, 3 = not permitted)
-        int value = atoi(params[VALUE]->value.c_str());
+        // UI command state: 0 = OFF, 1 = ON
+        // IEC104 double command state:
+        // 0 = Not permitted, 1 = OFF, 2 = ON, 3 = Not permitted
+        int requested = atoi(params[VALUE]->value.c_str());
 
-        // select or execute, must be a boolean
-        // 0 = execute, otherwise = select
+        int value;
+        if (requested == 0) {
+            value = 1;  // OFF
+        }
+        else if (requested == 1) {
+            value = 2;  // ON
+        }
+        else {
+            Iec104Utility::log_error(
+                "%s (CA: %i IOA: %i) Invalid double command value '%s', expected 0 (off) or 1 (on)",
+                beforeLog.c_str(), ca, ioa, params[VALUE]->value.c_str());
+            return false;
+        }
+
+        // Select or execute: 0 = execute, otherwise = select
         bool select = static_cast<bool>(atoi(params[SE]->value.c_str()));
 
         long time = 0;
